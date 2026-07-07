@@ -1,0 +1,24 @@
+# Build output
+target/
+!target/*.jar
+
+# IDE / editor
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# Git
+.git/
+.gitignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docs & local files
+README.md
+*.log
+.env

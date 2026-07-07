@@ -1,0 +1,124 @@
+# ---------------------------------------------------------------------------
+# Default profile (used for local development)
+# H2 in-memory database, verbose logging.
+# ---------------------------------------------------------------------------
+spring:
+  application:
+    name: map-application
+  profiles:
+    active: dev
+  datasource:
+    url: jdbc:h2:mem:mapdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+logging:
+  level:
+    root: INFO
+    com.appmcore: DEBUG
+
+---
+# ---------------------------------------------------------------------------
+# dev profile — quick local runs with H2 in-memory, DEBUG logging.
+# ---------------------------------------------------------------------------
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:mapdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+logging:
+  level:
+    root: INFO
+    com.appmcore: DEBUG
+
+---
+# ---------------------------------------------------------------------------
+# staging profile — PostgreSQL, connection pool of 10.
+# ---------------------------------------------------------------------------
+spring:
+  config:
+    activate:
+      on-profile: staging
+  datasource:
+    url: ${JDBC_URL:jdbc:postgresql://localhost:5432/mapdb}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME:mapapp}
+    password: ${DB_PASSWORD:changeme}
+    hikari:
+      maximum-pool-size: 10
+      pool-name: map-app-pool
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+logging:
+  level:
+    root: INFO
+    com.appmcore: INFO
+
+---
+# ---------------------------------------------------------------------------
+# prod profile — PostgreSQL, connection pool of 30, WARN logging.
+# ---------------------------------------------------------------------------
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${JDBC_URL:jdbc:postgresql://localhost:5432/mapdb}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME:mapapp}
+    password: ${DB_PASSWORD:changeme}
+    hikari:
+      maximum-pool-size: 30
+      pool-name: map-app-pool
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+logging:
+  level:
+    root: WARN
+    com.appmcore: WARN
