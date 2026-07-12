@@ -20,3 +20,42 @@ body,
     border-radius: 4px;
     font-size: 0.9rem;
 }
+
+#hint {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    padding: 0.4rem 0.9rem;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    pointer-events: none;
+}
+
+#toast {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    opacity: 0;
+    transform: translateY(-0.5rem);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+}
+
+#toast.toast--visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#toast.toast--error {
+    background: rgba(178, 34, 34, 0.9);
+}

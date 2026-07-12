@@ -35,7 +35,7 @@ public class SecurityConfig {
             .httpBasic(basic -> {})
             // H2 console renders inside a frame and posts without a CSRF token.
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
-            .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"));
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**", "/api/v1/map/**"));
 
         return http.build();
     }
