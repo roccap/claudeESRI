@@ -51,6 +51,9 @@ require(["esri/Map", "esri/views/MapView", "esri/Graphic"], function (Map, MapVi
             label: config.locationName || "Centre point"
         }));
 
+        // Render any markers already persisted on the server.
+        loadMarkers(view);
+
         // Click anywhere to persist and render a new marker.
         view.on("click", (event) => {
             const point = event.mapPoint;
@@ -65,6 +68,19 @@ require(["esri/Map", "esri/views/MapView", "esri/Graphic"], function (Map, MapVi
                 loading.style.display = "none";
             }
         });
+    }
+
+    /**
+     * Fetch previously persisted markers and render them. Failures are
+     * non-fatal — the map still works, it just starts empty.
+     */
+    function loadMarkers(view) {
+        fetch("/api/v1/map/markers")
+            .then((response) => (response.ok ? response.json() : []))
+            .catch(() => [])
+            .then((markers) => {
+                markers.forEach((marker) => view.graphics.add(createMarkerGraphic(marker)));
+            });
     }
 
     /**
