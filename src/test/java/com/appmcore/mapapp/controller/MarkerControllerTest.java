@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -52,5 +53,26 @@ class MarkerControllerTest {
         assertThat(response.getHeaders().getLocation()).isNotNull();
         assertThat(response.getHeaders().getLocation().toString()).isEqualTo("/api/v1/map/markers/" + id);
         assertThat(response.getBody()).isEqualTo(created);
+    }
+
+    @Test
+    void listMarkersReturns200WithMarkers() {
+        MarkerController controller = new MarkerController(markerSymbolService);
+
+        MarkerResponse marker = MarkerResponse.builder()
+            .id(UUID.randomUUID())
+            .latitude(new BigDecimal("51.5072"))
+            .longitude(new BigDecimal("-0.1276"))
+            .label("London")
+            .color("#E23131")
+            .size(12)
+            .createdAt(Instant.parse("2026-07-10T00:00:00Z"))
+            .build();
+        when(markerSymbolService.listMarkers()).thenReturn(List.of(marker));
+
+        ResponseEntity<List<MarkerResponse>> response = controller.listMarkers();
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).containsExactly(marker);
     }
 }

@@ -1,6 +1,7 @@
 package com.appmcore.mapapp.service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -54,6 +55,18 @@ public class MarkerSymbolService {
         log.debug("Created marker {} at lat={} lon={}", saved.getId(), saved.getLatitude(), saved.getLongitude());
 
         return toResponse(saved);
+    }
+
+    /**
+     * List all persisted marker symbols.
+     *
+     * @return every stored marker as a response DTO (never {@code null}; may be empty)
+     */
+    @Transactional(readOnly = true)
+    public List<MarkerResponse> listMarkers() {
+        return repository.findAll().stream()
+            .map(this::toResponse)
+            .toList();
     }
 
     private MarkerResponse toResponse(MarkerSymbol marker) {

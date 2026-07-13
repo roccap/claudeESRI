@@ -6,6 +6,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -77,5 +80,34 @@ class MarkerSymbolServiceTest {
         assertThat(response.color()).isEqualTo("#E23131");
         assertThat(response.size()).isEqualTo(12);
         assertThat(response.label()).isNull();
+    }
+
+    @Test
+    void listMarkersMapsAllStoredMarkers() {
+        MarkerSymbol marker = MarkerSymbol.builder()
+            .id(UUID.randomUUID())
+            .latitude(new BigDecimal("51.5072"))
+            .longitude(new BigDecimal("-0.1276"))
+            .label("London")
+            .color("#E23131")
+            .size(12)
+            .createdAt(Instant.parse("2026-07-10T00:00:00Z"))
+            .build();
+        when(repository.findAll()).thenReturn(List.of(marker));
+
+        List<MarkerResponse> responses = service.listMarkers();
+
+        assertThat(responses).hasSize(1);
+        assertThat(responses.getFirst().id()).isEqualTo(marker.getId());
+        assertThat(responses.getFirst().latitude()).isEqualByComparingTo("51.5072");
+        assertThat(responses.getFirst().longitude()).isEqualByComparingTo("-0.1276");
+        assertThat(responses.getFirst().label()).isEqualTo("London");
+    }
+
+    @Test
+    void listMarkersReturnsEmptyListWhenNoneStored() {
+        when(repository.findAll()).thenReturn(List.of());
+
+        assertThat(service.listMarkers()).isEmpty();
     }
 }
