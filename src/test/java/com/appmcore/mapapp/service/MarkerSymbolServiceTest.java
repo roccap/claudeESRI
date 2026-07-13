@@ -1,13 +1,16 @@
 package com.appmcore.mapapp.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -19,7 +22,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.appmcore.mapapp.dto.CreateMarkerRequest;
 import com.appmcore.mapapp.dto.MarkerResponse;
+import com.appmcore.mapapp.dto.UpdateMarkerLocationRequest;
 import com.appmcore.mapapp.entity.MarkerSymbol;
+import com.appmcore.mapapp.exception.MarkerNotFoundException;
 import com.appmcore.mapapp.repository.MarkerSymbolRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -109,5 +114,50 @@ class MarkerSymbolServiceTest {
         when(repository.findAll()).thenReturn(List.of());
 
         assertThat(service.listMarkers()).isEmpty();
+    }
+
+    @Test
+    void updateMarkerLocationMovesExistingMarker() {
+        UUID id = UUID.randomUUID();
+        MarkerSymbol existing = MarkerSymbol.builder()
+            .id(id)
+            .latitude(new BigDecimal("51.5072"))
+            .longitude(new BigDecimal("-0.1276"))
+            .label("London")
+            .color("#E23131")
+            .size(12)
+            .createdAt(Instant.parse("2026-07-10T00:00:00Z"))
+            .build();
+        when(repository.findById(id)).thenReturn(Optional.of(existing));
+        when(repository.save(any(MarkerSymbol.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        UpdateMarkerLocationRequest request = new UpdateMarkerLocationRequest(
+            new BigDecimal("48.8566"),
+            new BigDecimal("2.3522"));
+
+        MarkerResponse response = service.updateMarkerLocation(id, request);
+
+        assertThat(response.id()).isEqualTo(id);
+        assertThat(response.latitude()).isEqualByComparingTo("48.8566");
+        assertThat(response.longitude()).isEqualByComparingTo("2.3522");
+        // Non-location attributes are preserved.
+        assertThat(response.label()).isEqualTo("London");
+        assertThat(response.color()).isEqualTo("#E23131");
+        assertThat(response.size()).isEqualTo(12);
+    }
+
+    @Test
+    void updateMarkerLocationThrowsWhenMarkerMissing() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        UpdateMarkerLocationRequest request = new UpdateMarkerLocationRequest(
+            new BigDecimal("48.8566"),
+            new BigDecimal("2.3522"));
+
+        assertThatThrownBy(() -> service.updateMarkerLocation(id, request))
+            .isInstanceOf(MarkerNotFoundException.class)
+            .hasMessageContaining(id.toString());
+        verify(repository, never()).save(any(MarkerSymbol.class));
     }
 }

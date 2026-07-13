@@ -16,6 +16,19 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(MarkerNotFoundException.class)
+    public ResponseEntity<ApiError> handleNotFound(MarkerNotFoundException ex) {
+        ApiError body = ApiError.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.NOT_FOUND.value())
+            .error(HttpStatus.NOT_FOUND.getReasonPhrase())
+            .message(ex.getMessage())
+            .details(List.of())
+            .build();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
         List<String> details = ex.getBindingResult().getFieldErrors().stream()
