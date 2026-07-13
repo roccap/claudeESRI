@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 
 import com.appmcore.mapapp.dto.CreateMarkerRequest;
 import com.appmcore.mapapp.dto.MarkerResponse;
+import com.appmcore.mapapp.dto.UpdateMarkerLocationRequest;
 import com.appmcore.mapapp.service.MarkerSymbolService;
 
 @ExtendWith(MockitoExtension.class)
@@ -74,5 +75,30 @@ class MarkerControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).containsExactly(marker);
+    }
+
+    @Test
+    void updateMarkerLocationReturns200WithUpdatedMarker() {
+        MarkerController controller = new MarkerController(markerSymbolService);
+
+        UUID id = UUID.randomUUID();
+        UpdateMarkerLocationRequest request = new UpdateMarkerLocationRequest(
+            new BigDecimal("48.8566"),
+            new BigDecimal("2.3522"));
+        MarkerResponse updated = MarkerResponse.builder()
+            .id(id)
+            .latitude(request.latitude())
+            .longitude(request.longitude())
+            .label("London")
+            .color("#E23131")
+            .size(12)
+            .createdAt(Instant.parse("2026-07-10T00:00:00Z"))
+            .build();
+        when(markerSymbolService.updateMarkerLocation(id, request)).thenReturn(updated);
+
+        ResponseEntity<MarkerResponse> response = controller.updateMarkerLocation(id, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(updated);
     }
 }

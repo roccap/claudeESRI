@@ -11,7 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.appmcore.mapapp.dto.CreateMarkerRequest;
 import com.appmcore.mapapp.dto.MarkerResponse;
+import com.appmcore.mapapp.dto.UpdateMarkerLocationRequest;
 import com.appmcore.mapapp.entity.MarkerSymbol;
+import com.appmcore.mapapp.exception.MarkerNotFoundException;
 import com.appmcore.mapapp.repository.MarkerSymbolRepository;
 
 /**
@@ -67,6 +69,28 @@ public class MarkerSymbolService {
         return repository.findAll().stream()
             .map(this::toResponse)
             .toList();
+    }
+
+    /**
+     * Move an existing marker to a new latitude / longitude.
+     *
+     * @param id      the identifier of the marker to update
+     * @param request the validated new location
+     * @return the updated marker as a response DTO (never {@code null})
+     * @throws MarkerNotFoundException if no marker exists for {@code id}
+     */
+    @Transactional
+    public MarkerResponse updateMarkerLocation(UUID id, UpdateMarkerLocationRequest request) {
+        MarkerSymbol marker = repository.findById(id)
+            .orElseThrow(() -> new MarkerNotFoundException(id));
+
+        marker.setLatitude(request.latitude());
+        marker.setLongitude(request.longitude());
+
+        MarkerSymbol saved = repository.save(marker);
+        log.debug("Moved marker {} to lat={} lon={}", saved.getId(), saved.getLatitude(), saved.getLongitude());
+
+        return toResponse(saved);
     }
 
     private MarkerResponse toResponse(MarkerSymbol marker) {
