@@ -21,6 +21,14 @@ view is centred on **London, UK**.
 - Initial view configuration served from a versioned REST endpoint
   (`/api/v1/map/config`) so the map centre, zoom and basemap can be changed
   server-side.
+- Marker symbols persisted via a versioned REST API — create at a latitude /
+  longitude, list, and move an existing marker to a new location (JPA-backed;
+  H2 in dev).
+- Click-to-add and click-to-move marker interactions in the front-end: click
+  empty space to drop a marker, click a marker to select it, then click the
+  map to move it.
+- Central JSON error handling via `@RestControllerAdvice` (validation → `400`,
+  unknown marker → `404`).
 - Spring Security with sensible public defaults (map page + health endpoint).
 - Spring Boot Actuator for health / metrics.
 - Spring Retry + AOP enabled for resilient service calls.
@@ -30,13 +38,27 @@ view is centred on **London, UK**.
 
 ```
 src/main/java/com/appmcore/mapapp
-├── MapAppApplication.java        # entry point (@EnableRetry)
-├── config/SecurityConfig.java    # web security rules
-├── controller/MapController.java # /api/v1/map/config
-└── dto/MapViewConfig.java        # initial view record
+├── MapAppApplication.java              # entry point (@EnableRetry)
+├── config/SecurityConfig.java          # web security rules
+├── controller/
+│   ├── MapController.java              # /api/v1/map/config
+│   └── MarkerController.java           # /api/v1/map/markers
+├── service/MarkerSymbolService.java    # marker business logic
+├── repository/MarkerSymbolRepository.java
+├── entity/MarkerSymbol.java            # persisted marker (UUID id)
+├── dto/                                # request / response records
+│   ├── MapViewConfig.java
+│   ├── CreateMarkerRequest.java
+│   ├── UpdateMarkerLocationRequest.java
+│   └── MarkerResponse.java
+└── exception/                          # central error handling
+    ├── GlobalExceptionHandler.java     # @RestControllerAdvice
+    ├── ApiError.java                   # error payload record
+    └── MarkerNotFoundException.java
 src/main/resources
-├── application.yml               # dev / staging / prod profiles
-└── static                        # ArcGIS front-end (HTML/CSS/JS)
+├── application.yml                     # dev / staging / prod profiles
+└── static                              # ArcGIS front-end (HTML/CSS/JS)
+examples/api-examples.sh                # curl script exercising the API
 ```
 
 ## Configuration Profiles
@@ -129,5 +151,38 @@ docker run --rm -p 8080:8080 \
 |--------|-----------------------|-----------------------------------|------|
 | GET    | `/`                   | Map viewer page                   | public |
 | GET    | `/api/v1/map/config`  | Initial map view configuration    | public |
+| GET    | `/api/v1/map/markers` | List all markers                  | public |
+| POST   | `/api/v1/map/markers` | Create a marker at a latitude / longitude | public |
+| PUT    | `/api/v1/map/markers/{id}/location` | Move a marker to a new location | public |
 | GET    | `/actuator/health`    | Health check                      | public |
 | GET    | `/actuator/metrics`   | Metrics                           | authenticated |
+
+### Markers
+
+A marker is a point (`latitude`, `longitude`) with a symbol (`color` as a
+`#RRGGBB` hex string, `size`) and an optional `label`. Coordinates are
+validated to the `-90..90` / `-180..180` ranges; `color`, `size` and `label`
+are optional and fall back to the server defaults (`#E23131`, size `12`).
+
+```bash
+# Create a marker (minimal body)
+curl -X POST http://localhost:8080/api/v1/map/markers \
+  -H "Content-Type: application/json" \
+  -d '{"latitude": 51.5072, "longitude": -0.1276}'
+
+# Move an existing marker
+curl -X PUT http://localhost:8080/api/v1/map/markers/{id}/location \
+  -H "Content-Type: application/json" \
+  -d '{"latitude": 52.5200, "longitude": 13.4050}'
+```
+
+The `examples/api-examples.sh` script exercises every endpoint (including the
+`400` and `404` error paths) end-to-end:
+
+```bash
+mvn spring-boot:run          # in one terminal
+./examples/api-examples.sh   # in another (honours BASE_URL)
+```
+
+> Markers persist in the dev H2 in-memory database, so they survive page
+> reloads but not an application restart.
