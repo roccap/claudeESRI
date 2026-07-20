@@ -58,7 +58,9 @@ src/main/java/com/appmcore/mapapp
 src/main/resources
 ├── application.yml                     # dev / staging / prod profiles
 └── static                              # ArcGIS front-end (HTML/CSS/JS)
-examples/api-examples.sh                # curl script exercising the API
+examples/
+├── api-examples.sh                     # curl script exercising the API
+└── MarkerApiClient.java                # standalone Java client (create a marker)
 ```
 
 ## Configuration Profiles
@@ -182,6 +184,18 @@ The `examples/api-examples.sh` script exercises every endpoint (including the
 ```bash
 mvn spring-boot:run          # in one terminal
 ./examples/api-examples.sh   # in another (honours BASE_URL)
+```
+
+For a programmatic example, `examples/MarkerApiClient.java` is a standalone,
+dependency-free Java client that creates a marker by POSTing to
+`/api/v1/map/markers` and prints the response. It uses only the JDK's
+`java.net.http.HttpClient`, so it runs directly via the Java 21 single-file
+source launcher — no build step:
+
+```bash
+mvn spring-boot:run                       # in one terminal
+java examples/MarkerApiClient.java        # in another (defaults to localhost:8080)
+java examples/MarkerApiClient.java http://localhost:8080   # optional base URL
 ```
 
 > Markers persist in the dev H2 in-memory database, so they survive page
