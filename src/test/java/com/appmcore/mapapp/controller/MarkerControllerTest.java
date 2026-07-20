@@ -1,6 +1,7 @@
 package com.appmcore.mapapp.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -100,5 +101,18 @@ class MarkerControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(updated);
+    }
+
+    @Test
+    void deleteMarkerReturns204WithNoBody() {
+        MarkerController controller = new MarkerController(markerSymbolService);
+
+        UUID id = UUID.randomUUID();
+
+        ResponseEntity<Void> response = controller.deleteMarker(id);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(response.getBody()).isNull();
+        verify(markerSymbolService).deleteMarker(id);
     }
 }

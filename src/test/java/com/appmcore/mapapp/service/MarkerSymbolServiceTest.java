@@ -160,4 +160,25 @@ class MarkerSymbolServiceTest {
             .hasMessageContaining(id.toString());
         verify(repository, never()).save(any(MarkerSymbol.class));
     }
+
+    @Test
+    void deleteMarkerRemovesExistingMarker() {
+        UUID id = UUID.randomUUID();
+        when(repository.existsById(id)).thenReturn(true);
+
+        service.deleteMarker(id);
+
+        verify(repository).deleteById(id);
+    }
+
+    @Test
+    void deleteMarkerThrowsWhenMarkerMissing() {
+        UUID id = UUID.randomUUID();
+        when(repository.existsById(id)).thenReturn(false);
+
+        assertThatThrownBy(() -> service.deleteMarker(id))
+            .isInstanceOf(MarkerNotFoundException.class)
+            .hasMessageContaining(id.toString());
+        verify(repository, never()).deleteById(any(UUID.class));
+    }
 }
