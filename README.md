@@ -192,9 +192,10 @@ mvn spring-boot:run          # in one terminal
 
 For a programmatic example, `examples/MarkerApiClient.java` is a standalone,
 dependency-free Java client that creates a marker by POSTing to
-`/api/v1/map/markers` and prints the response. It uses only the JDK's
-`java.net.http.HttpClient`, so it runs directly via the Java 21 single-file
-source launcher — no build step:
+`/api/v1/map/markers`, then deletes it again via `DELETE
+/api/v1/map/markers/{id}`, printing the response at each step. It uses only the
+JDK's `java.net.http.HttpClient`, so it runs directly via the Java 21
+single-file source launcher — no build step:
 
 ```bash
 mvn spring-boot:run                       # in one terminal
