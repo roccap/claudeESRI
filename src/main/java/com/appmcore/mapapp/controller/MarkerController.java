@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -65,5 +66,16 @@ public class MarkerController {
             @PathVariable UUID id,
             @Valid @RequestBody UpdateMarkerLocationRequest request) {
         return ResponseEntity.ok(markerSymbolService.updateMarkerLocation(id, request));
+    }
+
+    /**
+     * Delete an existing marker.
+     *
+     * @return 204 No Content once the marker has been removed
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteMarker(@PathVariable UUID id) {
+        markerSymbolService.deleteMarker(id);
+        return ResponseEntity.noContent().build();
     }
 }

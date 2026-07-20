@@ -156,6 +156,7 @@ docker run --rm -p 8080:8080 \
 | GET    | `/api/v1/map/markers` | List all markers                  | public |
 | POST   | `/api/v1/map/markers` | Create a marker at a latitude / longitude | public |
 | PUT    | `/api/v1/map/markers/{id}/location` | Move a marker to a new location | public |
+| DELETE | `/api/v1/map/markers/{id}` | Delete a marker              | public |
 | GET    | `/actuator/health`    | Health check                      | public |
 | GET    | `/actuator/metrics`   | Metrics                           | authenticated |
 
@@ -176,6 +177,9 @@ curl -X POST http://localhost:8080/api/v1/map/markers \
 curl -X PUT http://localhost:8080/api/v1/map/markers/{id}/location \
   -H "Content-Type: application/json" \
   -d '{"latitude": 52.5200, "longitude": 13.4050}'
+
+# Delete a marker (204 No Content on success, 404 if unknown)
+curl -X DELETE http://localhost:8080/api/v1/map/markers/{id}
 ```
 
 The `examples/api-examples.sh` script exercises every endpoint (including the

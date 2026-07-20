@@ -93,6 +93,22 @@ public class MarkerSymbolService {
         return toResponse(saved);
     }
 
+    /**
+     * Delete an existing marker symbol.
+     *
+     * @param id the identifier of the marker to delete
+     * @throws MarkerNotFoundException if no marker exists for {@code id}
+     */
+    @Transactional
+    public void deleteMarker(UUID id) {
+        if (!repository.existsById(id)) {
+            throw new MarkerNotFoundException(id);
+        }
+
+        repository.deleteById(id);
+        log.debug("Deleted marker {}", id);
+    }
+
     private MarkerResponse toResponse(MarkerSymbol marker) {
         return MarkerResponse.builder()
             .id(marker.getId())
