@@ -28,6 +28,9 @@ view is centred on **London, UK**.
   empty space to drop a marker, click a marker to select it, then click the map
   to move it. A shape picker toolbar chooses the shape of new markers. Right-click
   opens a context menu to switch the base map (and, over a marker, to delete it).
+- Live symbol stream: a Kafka consumer (`map-symbols` topic) pushes symbols
+  (id, location, shape, colour) to the browser over Server-Sent Events, rendered
+  on a dedicated layer and updated in place by id.
 - Central JSON error handling via `@RestControllerAdvice` (validation → `400`,
   unknown marker → `404`).
 - Spring Security with sensible public defaults (map page + health endpoint).
@@ -43,19 +46,26 @@ src/main/java/com/appmcore/mapapp
 ├── config/SecurityConfig.java          # web security rules
 ├── controller/
 │   ├── MapController.java              # /api/v1/map/config
-│   └── MarkerController.java           # /api/v1/map/markers
-├── service/MarkerSymbolService.java    # marker business logic
+│   ├── MarkerController.java           # /api/v1/map/markers
+│   └── SymbolStreamController.java     # /api/v1/map/symbols/stream (SSE)
+├── kafka/SymbolStreamConsumer.java     # consumes the map-symbols topic
+├── service/
+│   ├── MarkerSymbolService.java        # marker business logic
+│   └── SymbolStreamService.java        # SSE fan-out of live symbols
 ├── repository/MarkerSymbolRepository.java
 ├── entity/MarkerSymbol.java            # persisted marker (UUID id)
+├── domain/MarkerShape.java             # marker shape enum (ESRI styles)
 ├── dto/                                # request / response records
 │   ├── MapViewConfig.java
 │   ├── CreateMarkerRequest.java
 │   ├── UpdateMarkerLocationRequest.java
-│   └── MarkerResponse.java
+│   ├── MarkerResponse.java
+│   └── SymbolMessage.java              # streamed symbol payload
 └── exception/                          # central error handling
     ├── GlobalExceptionHandler.java     # @RestControllerAdvice
     ├── ApiError.java                   # error payload record
     └── MarkerNotFoundException.java
+docker-compose.yml                      # local Kafka broker
 src/main/resources
 ├── application.yml                     # dev / staging / prod profiles
 ├── db/migration                        # Flyway SQL migrations (PostgreSQL)
@@ -168,6 +178,7 @@ docker run --rm -p 8080:8080 \
 | POST   | `/api/v1/map/markers` | Create a marker at a latitude / longitude | public |
 | PUT    | `/api/v1/map/markers/{id}/location` | Move a marker to a new location | public |
 | DELETE | `/api/v1/map/markers/{id}` | Delete a marker              | public |
+| GET    | `/api/v1/map/symbols/stream` | SSE stream of live symbols (from Kafka) | public |
 | GET    | `/actuator/health`    | Health check                      | public |
 | GET    | `/actuator/metrics`   | Metrics                           | authenticated |
 
@@ -223,3 +234,38 @@ java examples/MarkerApiClient.java http://localhost:8080   # optional base URL
 
 > Markers persist in the dev H2 in-memory database, so they survive page
 > reloads but not an application restart.
+
+### Live symbol stream (Kafka)
+
+Alongside user-placed markers, the app consumes a live stream of symbols from
+Kafka and pushes them to the browser over Server-Sent Events. Each symbol is
+keyed by `id`: a new id adds a symbol, a repeated id updates it in place. These
+symbols are display-only — rendered on a separate layer and **not** persisted.
+
+Messages are JSON on the `map-symbols` topic:
+
+```json
+{ "id": "a1", "latitude": 51.51, "longitude": -0.12, "shape": "triangle", "color": "#1E88E5" }
+```
+
+`shape` (`circle`, `square`, `diamond`, `triangle`, `cross`, `x`) and `color`
+(`#RRGGBB`) fall back to defaults for missing/unknown values; `id`, `latitude`
+and `longitude` are required.
+
+Run a local broker and feed it symbols:
+
+```bash
+docker compose up -d          # start Kafka (localhost:9092)
+mvn spring-boot:run           # app consumes map-symbols, pushes over SSE
+
+# produce a symbol (updates live on the open map)
+docker exec -i kafka /opt/kafka/bin/kafka-console-producer.sh \
+  --bootstrap-server localhost:9092 --topic map-symbols <<'EOF'
+{"id":"a1","latitude":51.51,"longitude":-0.12,"shape":"triangle","color":"#1E88E5"}
+EOF
+```
+
+Configuration (env vars): `KAFKA_BOOTSTRAP_SERVERS` (default `localhost:9092`),
+`SYMBOLS_TOPIC` (default `map-symbols`), `KAFKA_ENABLED` (default `true` — set
+`false` to disable the consumer when no broker is available). The browser
+subscribes at `GET /api/v1/map/symbols/stream`.
