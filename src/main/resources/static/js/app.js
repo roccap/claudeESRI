@@ -12,7 +12,7 @@
  *   - Right-click                -> context menu: switch the base map, and
  *                                   (over a marker) delete it (DELETE .../{id})
  */
-require(["esri/Map", "esri/views/MapView", "esri/Graphic"], function (Map, MapView, Graphic) {
+require(["esri/config", "esri/Map", "esri/views/MapView", "esri/Graphic"], function (esriConfig, Map, MapView, Graphic) {
     const loading = document.getElementById("loading");
     const toast = document.getElementById("toast");
 
@@ -55,6 +55,13 @@ require(["esri/Map", "esri/views/MapView", "esri/Graphic"], function (Map, MapVi
         .then((config) => initMap(config));
 
     function initMap(config) {
+        // An ArcGIS API key (served from /api/v1/map/config) is required for the
+        // arcgis/* basemaps to render; without one only key-free basemaps (OSM)
+        // load and ArcGIS shows a sign-in prompt.
+        if (config.apiKey) {
+            esriConfig.apiKey = config.apiKey;
+        }
+
         const map = new Map({
             basemap: config.basemap || "arcgis/streets"
         });

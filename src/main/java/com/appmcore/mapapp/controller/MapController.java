@@ -1,5 +1,6 @@
 package com.appmcore.mapapp.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,17 @@ public class MapController {
     private static final double LONDON_LATITUDE = 51.5072;
     private static final int DEFAULT_ZOOM = 11;
 
+    /**
+     * ArcGIS API key used by the front-end so the arcgis/* basemaps render.
+     * Supplied via the {@code ARCGIS_API_KEY} environment variable; empty when
+     * unset (the viewer then falls back to key-free basemaps such as OSM).
+     */
+    private final String arcgisApiKey;
+
+    public MapController(@Value("${arcgis.api-key:}") String arcgisApiKey) {
+        this.arcgisApiKey = arcgisApiKey;
+    }
+
     @GetMapping("/config")
     public ResponseEntity<MapViewConfig> initialView() {
         MapViewConfig config = MapViewConfig.builder()
@@ -28,6 +40,7 @@ public class MapController {
             .zoom(DEFAULT_ZOOM)
             .basemap("arcgis/streets")
             .locationName("London, UK")
+            .apiKey(arcgisApiKey)
             .build();
         return ResponseEntity.ok(config);
     }

@@ -8,7 +8,7 @@ import com.appmcore.mapapp.dto.MapViewConfig;
 
 class MapControllerTest {
 
-    private final MapController controller = new MapController();
+    private final MapController controller = new MapController("test-api-key");
 
     @Test
     void initialViewIsCentredOnLondon() {
@@ -20,5 +20,13 @@ class MapControllerTest {
         assertThat(config.zoom()).isEqualTo(11);
         assertThat(config.locationName()).isEqualTo("London, UK");
         assertThat(config.basemap()).isEqualTo("arcgis/streets");
+    }
+
+    @Test
+    void initialViewIncludesConfiguredApiKey() {
+        MapViewConfig config = controller.initialView().getBody();
+
+        assertThat(config).isNotNull();
+        assertThat(config.apiKey()).isEqualTo("test-api-key");
     }
 }

@@ -31,6 +31,12 @@ spring:
 server:
   port: 8080
 
+# ArcGIS API key exposed to the front-end via /api/v1/map/config so the
+# arcgis/* basemaps render. Supplied by the ARCGIS_API_KEY environment
+# variable; empty when unset (only key-free basemaps like OSM then work).
+arcgis:
+  api-key: ${ARCGIS_API_KEY:}
+
 management:
   endpoints:
     web:
