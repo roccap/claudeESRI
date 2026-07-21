@@ -27,9 +27,21 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: map-app
+      auto-offset-reset: latest
 
 server:
   port: 8080
+
+# Live symbol stream consumed from Kafka and pushed to the browser via SSE.
+# Disable the consumer with app.kafka.enabled=false when no broker is available.
+app:
+  kafka:
+    enabled: ${KAFKA_ENABLED:true}
+    symbols-topic: ${SYMBOLS_TOPIC:map-symbols}
 
 # ArcGIS API key exposed to the front-end via /api/v1/map/config so the
 # arcgis/* basemaps render. Supplied by the ARCGIS_API_KEY environment

@@ -43,6 +43,15 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
+        <!-- Kafka: consume a live stream of map symbols. In Spring Boot 4.0 the
+             Kafka auto-configuration (which enables @KafkaListener) lives in the
+             dedicated spring-boot-kafka module, not spring-boot-autoconfigure; it
+             brings spring-kafka transitively. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-kafka</artifactId>
+        </dependency>
+
         <!-- Resilience: retry with AOP interceptors.
              Spring Boot 4.0 removed the dedicated spring-boot-starter-aop and no
              longer manages spring-retry, so we pin spring-retry explicitly and

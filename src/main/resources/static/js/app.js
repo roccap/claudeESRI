@@ -12,7 +12,13 @@
  *   - Right-click                -> context menu: switch the base map, and
  *                                   (over a marker) delete it (DELETE .../{id})
  */
-require(["esri/config", "esri/Map", "esri/views/MapView", "esri/Graphic"], function (esriConfig, Map, MapView, Graphic) {
+require([
+    "esri/config",
+    "esri/Map",
+    "esri/views/MapView",
+    "esri/Graphic",
+    "esri/layers/GraphicsLayer"
+], function (esriConfig, Map, MapView, Graphic, GraphicsLayer) {
     const loading = document.getElementById("loading");
     const toast = document.getElementById("toast");
 
@@ -53,6 +59,10 @@ require(["esri/config", "esri/Map", "esri/views/MapView", "esri/Graphic"], funct
     ];
     let activeShape = DEFAULT_SHAPE;
 
+    // Live symbols from the Kafka stream, keyed by symbol id, rendered on a
+    // dedicated layer separate from the user-placed markers.
+    const streamedSymbols = new Map();
+
     // Fallback view (London) in case the config endpoint is unreachable.
     const fallback = {
         longitude: -0.1276,
@@ -79,6 +89,10 @@ require(["esri/config", "esri/Map", "esri/views/MapView", "esri/Graphic"], funct
             basemap: config.basemap || "arcgis/streets"
         });
 
+        // Dedicated layer for live streamed symbols (kept above user markers).
+        const symbolLayer = new GraphicsLayer({ id: "streamed-symbols" });
+        map.add(symbolLayer);
+
         const view = new MapView({
             container: "viewDiv",
             map: map,
@@ -104,6 +118,9 @@ require(["esri/config", "esri/Map", "esri/views/MapView", "esri/Graphic"], funct
 
         // Toolbar for choosing the shape of markers added by clicking the map.
         buildShapePicker();
+
+        // Subscribe to the live Kafka-backed symbol stream.
+        subscribeToSymbols(symbolLayer);
 
         view.on("click", (event) => {
             // Only the primary (left) button drives add/select/move; right-click
@@ -176,6 +193,58 @@ require(["esri/config", "esri/Map", "esri/views/MapView", "esri/Graphic"], funct
             .then((markers) => {
                 markers.forEach((marker) => view.graphics.add(createMarkerGraphic(marker)));
             });
+    }
+
+    /**
+     * Subscribe to the live symbol stream (SSE) and upsert each symbol onto the
+     * dedicated symbol layer. EventSource reconnects automatically on error.
+     */
+    function subscribeToSymbols(layer) {
+        if (typeof EventSource === "undefined") {
+            return;
+        }
+        const source = new EventSource("/api/v1/map/symbols/stream");
+        source.addEventListener("symbol", (event) => {
+            try {
+                upsertStreamedSymbol(layer, JSON.parse(event.data));
+            } catch (e) {
+                // Ignore malformed events.
+            }
+        });
+    }
+
+    /**
+     * Add or update (by id) a streamed symbol on the symbol layer. Streamed
+     * symbols are display-only — they carry no server marker id, so the
+     * click/select/move/delete interactions leave them untouched.
+     */
+    function upsertStreamedSymbol(layer, symbol) {
+        if (!symbol || symbol.id == null || symbol.longitude == null || symbol.latitude == null) {
+            return;
+        }
+        const color = symbol.color || DEFAULT_COLOR;
+        const shape = symbol.shape || DEFAULT_SHAPE;
+        const geometry = {
+            type: "point",
+            longitude: symbol.longitude,
+            latitude: symbol.latitude
+        };
+
+        const existing = streamedSymbols.get(symbol.id);
+        if (existing) {
+            existing.geometry = geometry;
+            existing.symbol = markerSymbol(color, DEFAULT_SIZE, false, shape);
+            return;
+        }
+
+        const graphic = new Graphic({
+            geometry: geometry,
+            symbol: markerSymbol(color, DEFAULT_SIZE, false, shape),
+            attributes: { symbolId: symbol.id },
+            popupTemplate: { title: "Symbol " + symbol.id }
+        });
+        layer.add(graphic);
+        streamedSymbols.set(symbol.id, graphic);
     }
 
     /**
