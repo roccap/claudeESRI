@@ -265,6 +265,14 @@ docker exec -i kafka /opt/kafka/bin/kafka-console-producer.sh \
 EOF
 ```
 
+To see symbols move, `examples/move.sh` streams three symbols along straight
+paths (same id per symbol, so they update in place):
+
+```bash
+docker cp examples/move.sh kafka:/tmp/move.sh
+docker exec kafka bash -c "tr -d '\r' < /tmp/move.sh | bash"   # watch http://localhost:8080
+```
+
 Configuration (env vars): `KAFKA_BOOTSTRAP_SERVERS` (default `localhost:9092`),
 `SYMBOLS_TOPIC` (default `map-symbols`), `KAFKA_ENABLED` (default `true` — set
 `false` to disable the consumer when no broker is available). The browser
