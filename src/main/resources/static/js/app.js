@@ -83,6 +83,11 @@ require(["esri/Map", "esri/views/MapView", "esri/Graphic"], function (Map, MapVi
         loadMarkers(view);
 
         view.on("click", (event) => {
+            // Only the primary (left) button drives add/select/move; right-click
+            // is reserved for the context menu, so ignore it here.
+            if (event.button !== 0) {
+                return;
+            }
             view.hitTest(event).then((response) => {
                 const hit = response.results.find(
                     (result) => result.graphic
