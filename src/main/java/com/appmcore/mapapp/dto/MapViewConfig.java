@@ -12,5 +12,6 @@ public record MapViewConfig(
         double latitude,
         int zoom,
         String basemap,
-        String locationName) {
+        String locationName,
+        String apiKey) {
 }
