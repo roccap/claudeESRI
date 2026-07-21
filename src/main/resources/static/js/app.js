@@ -9,7 +9,8 @@
  *   - Click a marker             -> select it (highlighted)
  *   - Click the map while a
  *     marker is selected         -> move it there  (PUT .../{id}/location)
- *   - Right-click a marker       -> delete it      (DELETE .../{id})
+ *   - Right-click                -> context menu: switch the base map, and
+ *                                   (over a marker) delete it (DELETE .../{id})
  */
 require(["esri/Map", "esri/views/MapView", "esri/Graphic"], function (Map, MapView, Graphic) {
     const loading = document.getElementById("loading");
@@ -22,6 +23,22 @@ require(["esri/Map", "esri/views/MapView", "esri/Graphic"], function (Map, MapVi
     let toastTimer = null;
     // The marker Graphic currently selected for moving, or null.
     let selectedGraphic = null;
+
+    // Base maps offered by the right-click context menu. The arcgis/* styles
+    // need an ArcGIS API key to render; "osm" (OpenStreetMap) works without one.
+    const BASEMAPS = [
+        { id: "arcgis/streets", label: "Streets" },
+        { id: "arcgis/imagery", label: "Imagery (Satellite)" },
+        { id: "arcgis/topographic", label: "Topographic" },
+        { id: "arcgis/navigation", label: "Navigation" },
+        { id: "arcgis/dark-gray", label: "Dark Gray" },
+        { id: "arcgis/light-gray", label: "Light Gray" },
+        { id: "osm", label: "OpenStreetMap" }
+    ];
+    // The id of the currently active base map (set once the config loads).
+    let currentBasemap = null;
+    // The open context-menu element, or null.
+    let contextMenuEl = null;
 
     // Fallback view (London) in case the config endpoint is unreachable.
     const fallback = {
@@ -94,22 +111,22 @@ require(["esri/Map", "esri/views/MapView", "esri/Graphic"], function (Map, MapVi
             });
         });
 
-        // Right-clicking a marker deletes it. Suppress the browser context
-        // menu over the map so the gesture is dedicated to deletion.
-        view.container.addEventListener("contextmenu", (event) => event.preventDefault());
-        view.on("pointer-down", (event) => {
-            if (event.button !== 2) {
-                return; // right mouse button only
-            }
-            view.hitTest(event).then((response) => {
+        // Track the active base map so the context menu can mark it.
+        currentBasemap = config.basemap || "arcgis/streets";
+
+        // Right-click opens a context menu: delete the clicked marker (if any)
+        // and switch the base map. Suppress the browser menu over the map.
+        view.container.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            const rect = view.container.getBoundingClientRect();
+            const screenPoint = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+            view.hitTest(screenPoint).then((response) => {
                 const hit = response.results.find(
                     (result) => result.graphic
                         && result.graphic.attributes
                         && result.graphic.attributes.markerId
                 );
-                if (hit) {
-                    deleteMarker(view, hit.graphic);
-                }
+                openContextMenu(view, map, event.clientX, event.clientY, hit ? hit.graphic : null);
             });
         });
 
@@ -213,6 +230,99 @@ require(["esri/Map", "esri/views/MapView", "esri/Graphic"], function (Map, MapVi
                 showToast("Marker deleted");
             })
             .catch(() => showToast("Could not delete marker", true));
+    }
+
+    /**
+     * Open the right-click context menu at (x, y) in viewport coordinates.
+     * When a marker was right-clicked, a "Delete marker" item is shown above
+     * the base-map choices; otherwise only the base-map choices appear.
+     */
+    function openContextMenu(view, map, x, y, markerGraphic) {
+        closeContextMenu();
+
+        const menu = document.createElement("div");
+        menu.className = "context-menu";
+
+        if (markerGraphic) {
+            const del = document.createElement("button");
+            del.type = "button";
+            del.className = "context-menu__item context-menu__item--danger";
+            del.textContent = "Delete marker";
+            del.addEventListener("click", () => {
+                closeContextMenu();
+                deleteMarker(view, markerGraphic);
+            });
+            menu.appendChild(del);
+
+            const divider = document.createElement("div");
+            divider.className = "context-menu__divider";
+            menu.appendChild(divider);
+        }
+
+        const header = document.createElement("div");
+        header.className = "context-menu__header";
+        header.textContent = "Base map";
+        menu.appendChild(header);
+
+        BASEMAPS.forEach((basemap) => {
+            const item = document.createElement("button");
+            item.type = "button";
+            item.className = "context-menu__item";
+            if (basemap.id === currentBasemap) {
+                item.classList.add("context-menu__item--active");
+            }
+            item.textContent = basemap.label;
+            item.addEventListener("click", () => {
+                closeContextMenu();
+                if (basemap.id !== currentBasemap) {
+                    map.basemap = basemap.id;
+                    currentBasemap = basemap.id;
+                    showToast("Base map: " + basemap.label);
+                }
+            });
+            menu.appendChild(item);
+        });
+
+        // Place off-screen to measure, then clamp within the viewport.
+        menu.style.left = "0";
+        menu.style.top = "0";
+        menu.style.visibility = "hidden";
+        document.body.appendChild(menu);
+        const rect = menu.getBoundingClientRect();
+        menu.style.left = Math.max(4, Math.min(x, window.innerWidth - rect.width - 4)) + "px";
+        menu.style.top = Math.max(4, Math.min(y, window.innerHeight - rect.height - 4)) + "px";
+        menu.style.visibility = "visible";
+
+        contextMenuEl = menu;
+        // Defer so the initiating event doesn't immediately dismiss the menu.
+        setTimeout(() => {
+            document.addEventListener("pointerdown", onDocumentPointerDown, true);
+            document.addEventListener("keydown", onDocumentKeyDown, true);
+        }, 0);
+    }
+
+    /** Close the context menu if open and detach its dismissal listeners. */
+    function closeContextMenu() {
+        if (contextMenuEl) {
+            contextMenuEl.remove();
+            contextMenuEl = null;
+            document.removeEventListener("pointerdown", onDocumentPointerDown, true);
+            document.removeEventListener("keydown", onDocumentKeyDown, true);
+        }
+    }
+
+    /** Dismiss the menu on any click outside it. */
+    function onDocumentPointerDown(event) {
+        if (contextMenuEl && !contextMenuEl.contains(event.target)) {
+            closeContextMenu();
+        }
+    }
+
+    /** Dismiss the menu on Escape. */
+    function onDocumentKeyDown(event) {
+        if (event.key === "Escape") {
+            closeContextMenu();
+        }
     }
 
     /** Highlight a marker as the current move target. */
