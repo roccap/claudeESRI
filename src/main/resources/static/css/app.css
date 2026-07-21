@@ -59,3 +59,67 @@ body,
 #toast.toast--error {
     background: rgba(178, 34, 34, 0.9);
 }
+
+.context-menu {
+    position: fixed;
+    z-index: 20;
+    min-width: 180px;
+    padding: 0.25rem;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    font-size: 0.9rem;
+    color: #222;
+    user-select: none;
+}
+
+.context-menu__header {
+    padding: 0.35rem 0.6rem 0.2rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #888;
+}
+
+.context-menu__item {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+    padding: 0.4rem 0.6rem;
+    border: 0;
+    background: none;
+    border-radius: 4px;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.context-menu__item:hover {
+    background: #eef2ff;
+}
+
+.context-menu__item--active {
+    font-weight: 600;
+}
+
+.context-menu__item--active::after {
+    content: " ✓";
+    color: #1e88e5;
+}
+
+.context-menu__item--danger {
+    color: #c62828;
+}
+
+.context-menu__item--danger:hover {
+    background: #fdecea;
+}
+
+.context-menu__divider {
+    height: 1px;
+    margin: 0.25rem 0.3rem;
+    background: rgba(0, 0, 0, 0.1);
+}
