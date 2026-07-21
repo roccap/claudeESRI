@@ -20,6 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.appmcore.mapapp.domain.MarkerShape;
 import com.appmcore.mapapp.dto.CreateMarkerRequest;
 import com.appmcore.mapapp.dto.MarkerResponse;
 import com.appmcore.mapapp.dto.UpdateMarkerLocationRequest;
@@ -43,7 +44,8 @@ class MarkerSymbolServiceTest {
             new BigDecimal("-0.1276"),
             "London",
             "#00FF00",
-            20);
+            20,
+            MarkerShape.SQUARE);
         when(repository.save(any(MarkerSymbol.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         MarkerResponse response = service.addMarker(request);
@@ -59,6 +61,7 @@ class MarkerSymbolServiceTest {
         assertThat(persisted.getLabel()).isEqualTo("London");
         assertThat(persisted.getColor()).isEqualTo("#00FF00");
         assertThat(persisted.getSize()).isEqualTo(20);
+        assertThat(persisted.getShape()).isEqualTo(MarkerShape.SQUARE);
 
         assertThat(response).isNotNull();
         assertThat(response.id()).isEqualTo(persisted.getId());
@@ -67,14 +70,16 @@ class MarkerSymbolServiceTest {
         assertThat(response.label()).isEqualTo("London");
         assertThat(response.color()).isEqualTo("#00FF00");
         assertThat(response.size()).isEqualTo(20);
+        assertThat(response.shape()).isEqualTo(MarkerShape.SQUARE);
         assertThat(response.createdAt()).isEqualTo(persisted.getCreatedAt());
     }
 
     @Test
-    void addMarkerAppliesDefaultColorAndSizeWhenOmitted() {
+    void addMarkerAppliesDefaultColorSizeAndShapeWhenOmitted() {
         CreateMarkerRequest request = new CreateMarkerRequest(
             new BigDecimal("40.0"),
             new BigDecimal("-70.0"),
+            null,
             null,
             null,
             null);
@@ -84,6 +89,7 @@ class MarkerSymbolServiceTest {
 
         assertThat(response.color()).isEqualTo("#E23131");
         assertThat(response.size()).isEqualTo(12);
+        assertThat(response.shape()).isEqualTo(MarkerShape.CIRCLE);
         assertThat(response.label()).isNull();
     }
 
@@ -96,6 +102,7 @@ class MarkerSymbolServiceTest {
             .label("London")
             .color("#E23131")
             .size(12)
+            .shape(MarkerShape.DIAMOND)
             .createdAt(Instant.parse("2026-07-10T00:00:00Z"))
             .build();
         when(repository.findAll()).thenReturn(List.of(marker));
@@ -107,6 +114,7 @@ class MarkerSymbolServiceTest {
         assertThat(responses.getFirst().latitude()).isEqualByComparingTo("51.5072");
         assertThat(responses.getFirst().longitude()).isEqualByComparingTo("-0.1276");
         assertThat(responses.getFirst().label()).isEqualTo("London");
+        assertThat(responses.getFirst().shape()).isEqualTo(MarkerShape.DIAMOND);
     }
 
     @Test
@@ -126,6 +134,7 @@ class MarkerSymbolServiceTest {
             .label("London")
             .color("#E23131")
             .size(12)
+            .shape(MarkerShape.TRIANGLE)
             .createdAt(Instant.parse("2026-07-10T00:00:00Z"))
             .build();
         when(repository.findById(id)).thenReturn(Optional.of(existing));
@@ -144,6 +153,7 @@ class MarkerSymbolServiceTest {
         assertThat(response.label()).isEqualTo("London");
         assertThat(response.color()).isEqualTo("#E23131");
         assertThat(response.size()).isEqualTo(12);
+        assertThat(response.shape()).isEqualTo(MarkerShape.TRIANGLE);
     }
 
     @Test

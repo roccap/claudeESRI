@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -41,6 +42,23 @@ public class GlobalExceptionHandler {
             .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
             .message("Validation failed")
             .details(details)
+            .build();
+
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    /**
+     * A request body that cannot be parsed — e.g. malformed JSON or an
+     * unknown enum value such as an unsupported marker {@code shape}.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleUnreadable(HttpMessageNotReadableException ex) {
+        ApiError body = ApiError.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.BAD_REQUEST.value())
+            .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+            .message("Malformed request body")
+            .details(List.of())
             .build();
 
         return ResponseEntity.badRequest().body(body);

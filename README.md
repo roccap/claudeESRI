@@ -174,15 +174,22 @@ docker run --rm -p 8080:8080 \
 ### Markers
 
 A marker is a point (`latitude`, `longitude`) with a symbol (`color` as a
-`#RRGGBB` hex string, `size`) and an optional `label`. Coordinates are
-validated to the `-90..90` / `-180..180` ranges; `color`, `size` and `label`
-are optional and fall back to the server defaults (`#E23131`, size `12`).
+`#RRGGBB` hex string, `size`, and `shape`) and an optional `label`. Coordinates
+are validated to the `-90..90` / `-180..180` ranges; `color`, `size`, `shape`
+and `label` are optional and fall back to the server defaults (`#E23131`, size
+`12`, shape `circle`). `shape` is one of `circle`, `square`, `diamond`,
+`triangle`, `cross`, `x` (an unknown value returns `400`).
 
 ```bash
 # Create a marker (minimal body)
 curl -X POST http://localhost:8080/api/v1/map/markers \
   -H "Content-Type: application/json" \
   -d '{"latitude": 51.5072, "longitude": -0.1276}'
+
+# Create a styled marker (blue diamond)
+curl -X POST http://localhost:8080/api/v1/map/markers \
+  -H "Content-Type: application/json" \
+  -d '{"latitude": 51.5072, "longitude": -0.1276, "color": "#1E88E5", "size": 20, "shape": "diamond"}'
 
 # Move an existing marker
 curl -X PUT http://localhost:8080/api/v1/map/markers/{id}/location \

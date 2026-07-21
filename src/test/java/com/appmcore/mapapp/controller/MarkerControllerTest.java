@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import com.appmcore.mapapp.domain.MarkerShape;
 import com.appmcore.mapapp.dto.CreateMarkerRequest;
 import com.appmcore.mapapp.dto.MarkerResponse;
 import com.appmcore.mapapp.dto.UpdateMarkerLocationRequest;
@@ -36,7 +37,8 @@ class MarkerControllerTest {
             new BigDecimal("-0.1276"),
             "London",
             "#E23131",
-            12);
+            12,
+            MarkerShape.SQUARE);
         UUID id = UUID.randomUUID();
         MarkerResponse created = MarkerResponse.builder()
             .id(id)
@@ -45,6 +47,7 @@ class MarkerControllerTest {
             .label(request.label())
             .color(request.color())
             .size(request.size())
+            .shape(request.shape())
             .createdAt(Instant.parse("2026-07-10T00:00:00Z"))
             .build();
         when(markerSymbolService.addMarker(request)).thenReturn(created);
@@ -68,6 +71,7 @@ class MarkerControllerTest {
             .label("London")
             .color("#E23131")
             .size(12)
+            .shape(MarkerShape.CIRCLE)
             .createdAt(Instant.parse("2026-07-10T00:00:00Z"))
             .build();
         when(markerSymbolService.listMarkers()).thenReturn(List.of(marker));
@@ -93,6 +97,7 @@ class MarkerControllerTest {
             .label("London")
             .color("#E23131")
             .size(12)
+            .shape(MarkerShape.CIRCLE)
             .createdAt(Instant.parse("2026-07-10T00:00:00Z"))
             .build();
         when(markerSymbolService.updateMarkerLocation(id, request)).thenReturn(updated);

@@ -19,6 +19,7 @@ require(["esri/config", "esri/Map", "esri/views/MapView", "esri/Graphic"], funct
     // Styling defaults mirror the backend's marker defaults.
     const DEFAULT_COLOR = "#E23131";
     const DEFAULT_SIZE = 12;
+    const DEFAULT_SHAPE = "circle";
 
     let toastTimer = null;
     // The marker Graphic currently selected for moving, or null.
@@ -344,7 +345,12 @@ require(["esri/config", "esri/Map", "esri/views/MapView", "esri/Graphic"], funct
         }
         clearSelection();
         selectedGraphic = graphic;
-        graphic.symbol = markerSymbol(graphic.attributes.color, graphic.attributes.size, true);
+        graphic.symbol = markerSymbol(
+            graphic.attributes.color,
+            graphic.attributes.size,
+            true,
+            graphic.attributes.shape
+        );
         showToast("Marker selected — click the map to move it");
     }
 
@@ -354,7 +360,8 @@ require(["esri/config", "esri/Map", "esri/views/MapView", "esri/Graphic"], funct
             selectedGraphic.symbol = markerSymbol(
                 selectedGraphic.attributes.color,
                 selectedGraphic.attributes.size,
-                false
+                false,
+                selectedGraphic.attributes.shape
             );
             selectedGraphic = null;
         }
@@ -362,23 +369,26 @@ require(["esri/config", "esri/Map", "esri/views/MapView", "esri/Graphic"], funct
 
     /**
      * Build an ESRI point Graphic from a marker-shaped object
-     * ({ id, longitude, latitude, color, size, label }). The server id (when
-     * present) is stored in attributes so the graphic can be selected/moved.
+     * ({ id, longitude, latitude, color, size, shape, label }). The server id
+     * (when present) is stored in attributes so the graphic can be
+     * selected/moved, alongside the styling used to rebuild its symbol.
      */
     function createMarkerGraphic(marker) {
         const color = marker.color || DEFAULT_COLOR;
         const size = marker.size || DEFAULT_SIZE;
+        const shape = marker.shape || DEFAULT_SHAPE;
         return new Graphic({
             geometry: {
                 type: "point",
                 longitude: marker.longitude,
                 latitude: marker.latitude
             },
-            symbol: markerSymbol(color, size, false),
+            symbol: markerSymbol(color, size, false, shape),
             attributes: {
                 markerId: marker.id || null,
                 color: color,
-                size: size
+                size: size,
+                shape: shape
             },
             popupTemplate: {
                 title: marker.label || "Marker"
@@ -386,10 +396,14 @@ require(["esri/config", "esri/Map", "esri/views/MapView", "esri/Graphic"], funct
         });
     }
 
-    /** A simple-marker symbol; when selected it gets a gold highlight outline. */
-    function markerSymbol(color, size, selected) {
+    /**
+     * A simple-marker symbol of the given shape (ESRI style); when selected it
+     * gets a gold highlight outline.
+     */
+    function markerSymbol(color, size, selected, shape) {
         return {
             type: "simple-marker",
+            style: shape || DEFAULT_SHAPE,
             color: color || DEFAULT_COLOR,
             size: size || DEFAULT_SIZE,
             outline: selected
