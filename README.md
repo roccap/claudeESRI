@@ -57,6 +57,8 @@ src/main/java/com/appmcore/mapapp
     └── MarkerNotFoundException.java
 src/main/resources
 ├── application.yml                     # dev / staging / prod profiles
+├── db/migration                        # Flyway SQL migrations (PostgreSQL)
+│   └── V1__create_marker_symbol.sql
 └── static                              # ArcGIS front-end (HTML/CSS/JS)
 examples/
 ├── api-examples.sh                     # curl script exercising the API
@@ -73,6 +75,14 @@ examples/
 
 Staging and prod read the datasource from environment variables:
 `JDBC_URL`, `DB_USERNAME`, `DB_PASSWORD`.
+
+### Database schema
+
+On PostgreSQL (staging/prod) the schema is managed by **Flyway**: migrations in
+`src/main/resources/db/migration` run automatically at startup, before Hibernate
+validates the mapping (`ddl-auto: validate`). The dev profile uses H2 with
+Hibernate `ddl-auto: update` and has Flyway disabled, so no migrations are needed
+for local runs. Add a new `V<n>__<description>.sql` file for each schema change.
 
 ## Build & Run
 
