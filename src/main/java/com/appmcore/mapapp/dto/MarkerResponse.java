@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.appmcore.mapapp.domain.MarkerShape;
+
 import lombok.Builder;
 
 /**
@@ -17,5 +19,6 @@ public record MarkerResponse(
         String label,
         String color,
         int size,
+        MarkerShape shape,
         Instant createdAt) {
 }

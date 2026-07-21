@@ -2,6 +2,8 @@ package com.appmcore.mapapp.dto;
 
 import java.math.BigDecimal;
 
+import com.appmcore.mapapp.domain.MarkerShape;
+
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
@@ -12,8 +14,8 @@ import jakarta.validation.constraints.Size;
 
 /**
  * Request body for creating a new marker symbol at a geographic location.
- * {@code label}, {@code color} and {@code size} are optional; the service
- * applies defaults when they are omitted.
+ * {@code label}, {@code color}, {@code size} and {@code shape} are optional;
+ * the service applies defaults when they are omitted.
  */
 public record CreateMarkerRequest(
 
@@ -35,5 +37,7 @@ public record CreateMarkerRequest(
 
         @Min(value = 1, message = "size must be at least 1")
         @Max(value = 100, message = "size must be at most 100")
-        Integer size) {
+        Integer size,
+
+        MarkerShape shape) {
 }

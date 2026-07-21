@@ -4,8 +4,12 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.appmcore.mapapp.domain.MarkerShape;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -48,6 +52,11 @@ public class MarkerSymbol {
     /** Marker fill colour as a #RRGGBB hex string. */
     @Column(nullable = false, length = 7)
     private String color;
+
+    /** Marker shape (ESRI simple-marker style). */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    private MarkerShape shape;
 
     /** Marker size in points. */
     @Column(nullable = false)

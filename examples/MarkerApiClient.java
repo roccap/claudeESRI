@@ -47,8 +47,10 @@ public class MarkerApiClient {
      * Location header of the 201 response).
      */
     private static String createMarker(HttpClient client, String baseUrl) throws Exception {
-        // latitude/longitude are required; label, color and size are optional
-        // and fall back to server defaults (color #E23131, size 12) when omitted.
+        // latitude/longitude are required; label, color, size and shape are
+        // optional and fall back to server defaults (color #E23131, size 12,
+        // shape circle) when omitted. shape is one of: circle, square, diamond,
+        // triangle, cross, x.
         //
         // JSON is hand-built here to keep the example dependency-free; a real
         // client would use Jackson, Gson, or Spring's RestClient/WebClient.
@@ -58,7 +60,8 @@ public class MarkerApiClient {
                   "longitude": -0.1276,
                   "label": "London Eye",
                   "color": "#1E88E5",
-                  "size": 20
+                  "size": 20,
+                  "shape": "diamond"
                 }""";
 
         HttpRequest request = HttpRequest.newBuilder()

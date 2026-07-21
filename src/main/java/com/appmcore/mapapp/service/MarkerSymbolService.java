@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.appmcore.mapapp.domain.MarkerShape;
 import com.appmcore.mapapp.dto.CreateMarkerRequest;
 import com.appmcore.mapapp.dto.MarkerResponse;
 import com.appmcore.mapapp.dto.UpdateMarkerLocationRequest;
@@ -27,6 +28,7 @@ public class MarkerSymbolService {
     /** Default marker colour — matches the client-side ESRI symbol (RGB 226,49,49). */
     private static final String DEFAULT_COLOR = "#E23131";
     private static final int DEFAULT_SIZE = 12;
+    private static final MarkerShape DEFAULT_SHAPE = MarkerShape.CIRCLE;
 
     private final MarkerSymbolRepository repository;
 
@@ -50,6 +52,7 @@ public class MarkerSymbolService {
             .label(request.label())
             .color(request.color() != null ? request.color() : DEFAULT_COLOR)
             .size(request.size() != null ? request.size() : DEFAULT_SIZE)
+            .shape(request.shape() != null ? request.shape() : DEFAULT_SHAPE)
             .createdAt(Instant.now())
             .build();
 
@@ -117,6 +120,7 @@ public class MarkerSymbolService {
             .label(marker.getLabel())
             .color(marker.getColor())
             .size(marker.getSize())
+            .shape(marker.getShape())
             .createdAt(marker.getCreatedAt())
             .build();
     }
