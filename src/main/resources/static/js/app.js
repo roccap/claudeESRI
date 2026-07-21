@@ -9,6 +9,7 @@
  *   - Click a marker             -> select it (highlighted)
  *   - Click the map while a
  *     marker is selected         -> move it there  (PUT .../{id}/location)
+ *   - Right-click a marker       -> delete it      (DELETE .../{id})
  */
 require(["esri/Map", "esri/views/MapView", "esri/Graphic"], function (Map, MapView, Graphic) {
     const loading = document.getElementById("loading");
@@ -93,6 +94,25 @@ require(["esri/Map", "esri/views/MapView", "esri/Graphic"], function (Map, MapVi
             });
         });
 
+        // Right-clicking a marker deletes it. Suppress the browser context
+        // menu over the map so the gesture is dedicated to deletion.
+        view.container.addEventListener("contextmenu", (event) => event.preventDefault());
+        view.on("pointer-down", (event) => {
+            if (event.button !== 2) {
+                return; // right mouse button only
+            }
+            view.hitTest(event).then((response) => {
+                const hit = response.results.find(
+                    (result) => result.graphic
+                        && result.graphic.attributes
+                        && result.graphic.attributes.markerId
+                );
+                if (hit) {
+                    deleteMarker(view, hit.graphic);
+                }
+            });
+        });
+
         view.when(() => {
             if (loading) {
                 loading.style.display = "none";
@@ -172,6 +192,27 @@ require(["esri/Map", "esri/views/MapView", "esri/Graphic"], function (Map, MapVi
                 showToast("Marker moved");
             })
             .catch(() => showToast("Could not move marker", true));
+    }
+
+    /**
+     * Delete a marker on the server, then remove its graphic from the map.
+     * Clears the selection first if the deleted marker was selected.
+     */
+    function deleteMarker(view, graphic) {
+        const id = graphic.attributes.markerId;
+        if (selectedGraphic === graphic) {
+            selectedGraphic = null;
+        }
+
+        fetch("/api/v1/map/markers/" + id, { method: "DELETE" })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("HTTP " + response.status);
+                }
+                view.graphics.remove(graphic);
+                showToast("Marker deleted");
+            })
+            .catch(() => showToast("Could not delete marker", true));
     }
 
     /** Highlight a marker as the current move target. */
