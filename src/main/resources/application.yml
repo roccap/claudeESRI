@@ -16,6 +16,10 @@ spring:
     console:
       enabled: true
       path: /h2-console
+  # Flyway owns the schema on PostgreSQL (staging/prod); dev uses H2 with
+  # Hibernate ddl-auto, so it is disabled here and enabled per-profile below.
+  flyway:
+    enabled: false
   jpa:
     hibernate:
       ddl-auto: update
@@ -83,6 +87,8 @@ spring:
     hikari:
       maximum-pool-size: 10
       pool-name: map-app-pool
+  flyway:
+    enabled: true
   jpa:
     hibernate:
       ddl-auto: validate
@@ -111,6 +117,8 @@ spring:
     hikari:
       maximum-pool-size: 30
       pool-name: map-app-pool
+  flyway:
+    enabled: true
   jpa:
     hibernate:
       ddl-auto: validate

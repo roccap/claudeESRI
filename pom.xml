@@ -58,6 +58,22 @@
             <artifactId>spring-aspects</artifactId>
         </dependency>
 
+        <!-- Schema migrations for PostgreSQL (staging/prod).
+             Boot runs Flyway before Hibernate validates the schema, so the
+             marker_symbol table exists on a fresh database. In Spring Boot 4.0
+             the Flyway auto-configuration lives in the dedicated spring-boot-flyway
+             module (it is no longer part of spring-boot-autoconfigure), which also
+             brings flyway-core transitively. flyway-database-postgresql adds
+             PostgreSQL support for Flyway 11. Versions are managed by the Boot BOM. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-flyway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+
         <!-- Runtime databases -->
         <dependency>
             <groupId>com.h2database</groupId>
