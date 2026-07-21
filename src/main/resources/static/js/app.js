@@ -41,6 +41,18 @@ require(["esri/config", "esri/Map", "esri/views/MapView", "esri/Graphic"], funct
     // The open context-menu element, or null.
     let contextMenuEl = null;
 
+    // Shapes offered by the click-to-add picker; glyphs mirror the ESRI
+    // simple-marker styles. activeShape is applied to the next added marker.
+    const SHAPES = [
+        { id: "circle", label: "Circle", glyph: "●" },
+        { id: "square", label: "Square", glyph: "■" },
+        { id: "diamond", label: "Diamond", glyph: "◆" },
+        { id: "triangle", label: "Triangle", glyph: "▲" },
+        { id: "cross", label: "Cross", glyph: "✚" },
+        { id: "x", label: "X", glyph: "✕" }
+    ];
+    let activeShape = DEFAULT_SHAPE;
+
     // Fallback view (London) in case the config endpoint is unreachable.
     const fallback = {
         longitude: -0.1276,
@@ -89,6 +101,9 @@ require(["esri/config", "esri/Map", "esri/views/MapView", "esri/Graphic"], funct
 
         // Render any markers already persisted on the server.
         loadMarkers(view);
+
+        // Toolbar for choosing the shape of markers added by clicking the map.
+        buildShapePicker();
 
         view.on("click", (event) => {
             // Only the primary (left) button drives add/select/move; right-click
@@ -174,7 +189,8 @@ require(["esri/config", "esri/Map", "esri/views/MapView", "esri/Graphic"], funct
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 longitude: Number(longitude.toFixed(6)),
-                latitude: Number(latitude.toFixed(6))
+                latitude: Number(latitude.toFixed(6)),
+                shape: activeShape
             })
         })
             .then((response) => {
@@ -188,6 +204,52 @@ require(["esri/config", "esri/Map", "esri/views/MapView", "esri/Graphic"], funct
                 showToast("Marker added");
             })
             .catch(() => showToast("Could not add marker", true));
+    }
+
+    /**
+     * Build the click-to-add shape picker: a small toolbar whose selected
+     * shape is applied to markers dropped by clicking the map.
+     */
+    function buildShapePicker() {
+        if (document.getElementById("shape-picker")) {
+            return;
+        }
+        const picker = document.createElement("div");
+        picker.id = "shape-picker";
+        picker.setAttribute("role", "group");
+        picker.setAttribute("aria-label", "Shape for new markers");
+
+        const label = document.createElement("span");
+        label.className = "shape-picker__label";
+        label.textContent = "Add:";
+        picker.appendChild(label);
+
+        SHAPES.forEach((shape) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "shape-btn";
+            button.dataset.shape = shape.id;
+            button.textContent = shape.glyph;
+            button.title = shape.label;
+            button.setAttribute("aria-label", shape.label);
+            const active = shape.id === activeShape;
+            button.setAttribute("aria-pressed", String(active));
+            if (active) {
+                button.classList.add("shape-btn--active");
+            }
+            button.addEventListener("click", () => {
+                activeShape = shape.id;
+                picker.querySelectorAll(".shape-btn").forEach((other) => {
+                    const isActive = other.dataset.shape === activeShape;
+                    other.classList.toggle("shape-btn--active", isActive);
+                    other.setAttribute("aria-pressed", String(isActive));
+                });
+                showToast("Add shape: " + shape.label);
+            });
+            picker.appendChild(button);
+        });
+
+        document.body.appendChild(picker);
     }
 
     /**

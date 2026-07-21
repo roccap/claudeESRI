@@ -123,3 +123,52 @@ body,
     margin: 0.25rem 0.3rem;
     background: rgba(0, 0, 0, 0.1);
 }
+
+#shape-picker {
+    position: absolute;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.3rem 0.4rem;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    user-select: none;
+}
+
+.shape-picker__label {
+    padding: 0 0.3rem 0 0.1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #555;
+}
+
+.shape-btn {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: none;
+    font-size: 1rem;
+    line-height: 1;
+    color: #444;
+    cursor: pointer;
+}
+
+.shape-btn:hover {
+    background: #eef2ff;
+}
+
+.shape-btn--active {
+    background: #1e88e5;
+    border-color: #1e88e5;
+    color: #fff;
+}
