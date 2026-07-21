@@ -26,8 +26,8 @@ view is centred on **London, UK**.
   H2 in dev).
 - Click-to-add and click-to-move marker interactions in the front-end: click
   empty space to drop a marker, click a marker to select it, then click the map
-  to move it. Right-click opens a context menu to switch the base map (and, over
-  a marker, to delete it).
+  to move it. A shape picker toolbar chooses the shape of new markers. Right-click
+  opens a context menu to switch the base map (and, over a marker, to delete it).
 - Central JSON error handling via `@RestControllerAdvice` (validation → `400`,
   unknown marker → `404`).
 - Spring Security with sensible public defaults (map page + health endpoint).
