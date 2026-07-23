@@ -32,6 +32,7 @@ public class SymbolStreamConsumer {
         topics = "${app.kafka.symbols-topic}",
         groupId = "${spring.kafka.consumer.group-id:map-app}")
     public void onMessage(String payload) {
+        log.error("Mylog XXX message: {}", payload);
         try {
             SymbolMessage symbol = objectMapper.readValue(payload, SymbolMessage.class);
             if (symbol.id() == null || symbol.latitude() == null || symbol.longitude() == null) {

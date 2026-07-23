@@ -32,6 +32,11 @@ spring:
     consumer:
       group-id: map-app
       auto-offset-reset: latest
+    listener:
+      # Do not start listeners during context refresh: a missing/unresolvable
+      # broker would otherwise abort app startup. KafkaListenerStarter starts
+      # them after the app is ready, tolerating a broker that is not yet up.
+      auto-startup: false
 
 server:
   port: 8080
